@@ -38,7 +38,7 @@ variable "vm_image" {
 }
 
 variable "vm_network" {
-  default     = "default"
+  default     = "k8s-network"
   description = "VM network"
 }
 
@@ -48,7 +48,7 @@ variable "vm_count" {
 }
 
 variable "vm_disk_size" {
-  default     = 20
+  default     = 40
   description = "VM disk size"
 }
 
