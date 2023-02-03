@@ -3,6 +3,11 @@ resource "google_compute_network" "k8s_network" {
   project                 = var.project
   name                    = var.vm_network
   auto_create_subnetworks = false
+  timeouts {
+    create = "10m"
+    update = "10m"
+    delete = "10m"
+  }
 }
 
 resource "google_compute_subnetwork" "k8s_subnet" {
@@ -10,14 +15,21 @@ resource "google_compute_subnetwork" "k8s_subnet" {
   ip_cidr_range = "10.10.10.0/24"
   network       = var.vm_network
   region        = var.region
+  timeouts {
+    create = "10m"
+    update = "10m"
+    delete = "10m"
+  }
+  depends_on = [google_compute_network.k8s_network]
 }
 
 # Cloud NAT setup for egress trafic
 resource "google_compute_router" "router" {
-  project = var.project
-  name    = "nat-router"
-  network = var.vm_network
-  region  = var.region
+  project    = var.project
+  name       = "nat-router"
+  network    = var.vm_network
+  region     = var.region
+  depends_on = [google_compute_subnetwork.k8s_subnet]
 }
 
 resource "google_compute_router_nat" "nat" {
@@ -26,7 +38,7 @@ resource "google_compute_router_nat" "nat" {
   region                             = var.region
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-
+  depends_on                         = [google_compute_subnetwork.k8s_subnet]
   log_config {
     enable = true
     filter = "ERRORS_ONLY"
@@ -35,10 +47,11 @@ resource "google_compute_router_nat" "nat" {
 
 # Firewall rules
 resource "google_compute_firewall" "egress-rules" {
-  project   = var.project
-  name      = "k8s-fw-out-rules"
-  network   = var.vm_network
-  direction = "EGRESS"
+  project    = var.project
+  name       = "k8s-fw-out-rules"
+  network    = var.vm_network
+  direction  = "EGRESS"
+  depends_on = [google_compute_subnetwork.k8s_subnet]
   allow {
     protocol = "all"
   }
@@ -46,10 +59,11 @@ resource "google_compute_firewall" "egress-rules" {
 }
 
 resource "google_compute_firewall" "internal-ingress-rules" {
-  project   = var.project
-  name      = "k8s-fw-internal-in-rules"
-  network   = var.vm_network
-  direction = "INGRESS"
+  project    = var.project
+  name       = "k8s-fw-internal-in-rules"
+  network    = var.vm_network
+  direction  = "INGRESS"
+  depends_on = [google_compute_subnetwork.k8s_subnet]
   allow {
     protocol = "all"
   }
@@ -58,10 +72,11 @@ resource "google_compute_firewall" "internal-ingress-rules" {
 }
 
 resource "google_compute_firewall" "ssh-rules" {
-  project   = var.project
-  name      = "k8s-fw-ssh-rules"
-  network   = var.vm_network
-  direction = "INGRESS"
+  project    = var.project
+  name       = "k8s-fw-ssh-rules"
+  network    = var.vm_network
+  direction  = "INGRESS"
+  depends_on = [google_compute_subnetwork.k8s_subnet]
   allow {
     protocol = "tcp"
     ports    = ["22"]
@@ -76,16 +91,22 @@ resource "google_compute_instance" "k8s_infra" {
   count        = var.vm_count
   machine_type = var.vm_type
   zone         = var.zone
-
-  tags = var.tags
-
+  depends_on   = [google_compute_subnetwork.k8s_subnet]
+  tags         = var.tags
+  labels = {
+    group = var.ansible_group
+  }
   boot_disk {
     initialize_params {
       image = var.vm_image
       size  = var.vm_disk_size
     }
   }
-
+  scheduling {
+    preemptible        = true
+    automatic_restart  = false
+    provisioning_model = "SPOT"
+  }
   network_interface {
     network    = var.vm_network
     subnetwork = google_compute_subnetwork.k8s_subnet.name

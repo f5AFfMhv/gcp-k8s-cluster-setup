@@ -1,0 +1,8 @@
+plugin: gcp_compute
+hostnames:
+  - name
+projects:
+  - personal-stuff-337412
+keyed_groups:
+  - prefix: gce
+    key: labels

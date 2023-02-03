@@ -21,6 +21,10 @@ variable "tags" {
   default     = ["k8s"]
   description = "VM tags"
 }
+variable "ansible_group" {
+  default     = "k8s"
+  description = "Label value for ansible group"
+}
 
 variable "vm_name" {
   default     = "k8s"
@@ -48,7 +52,7 @@ variable "vm_count" {
 }
 
 variable "vm_disk_size" {
-  default     = 40
+  default     = 20
   description = "VM disk size"
 }
 

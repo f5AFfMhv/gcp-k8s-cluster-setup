@@ -1,0 +1,31 @@
+---
+- name: Setup k8s
+  hosts: gce_group_k8s
+  gather_facts: false
+  become: true
+  vars:
+    packages:
+      - vim
+      - curl
+      - apt-transport-https
+      - git
+      - wget
+      - gnupg2
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - uidmap
+  tasks:
+
+    - name: Install required applications
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        state: present
+
+    - name: Check modprobe
+      ansible.builtin.command: modprobe overlay && modprobe br_netfilter
+      register: modprobe
+
+    - name: Show modprobe results
+      ansible.builtin.debug:
+        var: modprobe
