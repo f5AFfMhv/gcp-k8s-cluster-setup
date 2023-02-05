@@ -1,0 +1,31 @@
+---
+- name: Controller plane tasks
+  gather_facts: false
+  become: true
+  hosts: gce_group_cp
+
+  pre_tasks:
+
+  tasks:
+    - name: Deploy kubeadm config file
+      ansible.builtin.template:
+        src: templates/kubeadm-config.yaml.j2
+        dest: /root/kubeadm-config.yaml
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Initialize k8s cluster
+      ansible.builtin.command:
+        cmd: kubeadm init --config=kubeadm-config.yaml --upload-certs
+      args:
+        chdir: /root/
+      register: kubeadm
+      changed_when: kubeadm.rc == 0
+
+    - name: Print output of kubeadm init
+      ansible.builtin.debug:
+        msg: "{{ kubeadm.stdout }}"
+
+  handlers:
+

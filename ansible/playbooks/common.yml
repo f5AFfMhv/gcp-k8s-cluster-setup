@@ -1,0 +1,67 @@
+---
+- name: Common tasks for all hosts
+  gather_facts: false
+  become: true
+  hosts: all
+
+  pre_tasks:
+    - name: Add an Apt signing key for docker
+      ansible.builtin.apt_key:
+        url: "{{ item }}"
+        state: present
+      with_items: "{{ gpg_keys }}"
+
+    - name: Add kubernetes repository into sources list
+      ansible.builtin.apt_repository:
+        repo: "{{ item }}"
+        state: present
+      with_items: "{{ apt_repositories }}"
+
+  tasks:
+    - name: Install required applications
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: true
+
+    - name: Prevent kubernetes packages from being upgraded
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      with_items:
+        - kubelet
+        - kubeadm
+        - kubectl
+
+    - name: Add required kernel modules
+      community.general.modprobe:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - overlay
+        - br_netfilter
+
+    - name: Copy sysctl config file for kubernetes
+      ansible.builtin.copy:
+        src: files/kubernetes.conf
+        dest: /etc/sysctl.d/kubernetes.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Apply sysctl configuration
+
+  handlers:
+    - name: Apply sysctl configuration
+      ansible.builtin.command:
+        cmd: sysctl --system
+      async: 120
+      poll: 0
+      register: net_restarting
+
+    - name: Check network connectivity
+      async_status:
+        jid: "{{ net_restarting.ansible_job_id }}"
+      register: async_poll_results
+      until: async_poll_results.finished
+      retries: 30
+      listen: Apply sysctl configuration

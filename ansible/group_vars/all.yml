@@ -1,4 +1,26 @@
 ---
-zone: us-west1-a
+zone: "{{ lookup('ansible.builtin.env', 'GCE_ZONE') }}"
 ansible_ssh_args: "--tunnel-through-iap --zone={{ zone }} --no-user-output-enabled --quiet"
 ansible_scp_extra_args: "--tunnel-through-iap --zone={{ zone }} --quiet"
+
+gpg_keys:
+  - https://download.docker.com/linux/ubuntu/gpg
+  - https://packages.cloud.google.com/apt/doc/apt-key.gpg
+apt_repositories:
+  - 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
+  - 'deb https://download.docker.com/linux/ubuntu jammy stable'
+packages:
+  - vim
+  - curl
+  - apt-transport-https
+  - git
+  - wget
+  - gnupg2
+  - software-properties-common
+  - apt-transport-https
+  - ca-certificates
+  - uidmap
+  - containerd.io
+  - kubeadm=1.26.1-00
+  - kubelet=1.26.1-00
+  - kubectl=1.26.1-00

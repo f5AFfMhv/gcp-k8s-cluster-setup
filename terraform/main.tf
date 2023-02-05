@@ -94,7 +94,7 @@ resource "google_compute_instance" "k8s_infra" {
   depends_on   = [google_compute_subnetwork.k8s_subnet]
   tags         = var.tags
   labels = {
-    group = var.ansible_group
+    group = var.ansible_groups[count.index]
   }
   boot_disk {
     initialize_params {

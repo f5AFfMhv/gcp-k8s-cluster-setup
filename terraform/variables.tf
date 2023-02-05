@@ -21,9 +21,10 @@ variable "tags" {
   default     = ["k8s"]
   description = "VM tags"
 }
-variable "ansible_group" {
-  default     = "k8s"
-  description = "Label value for ansible group"
+
+variable "ansible_groups" {
+  default     = ["cp", "worker", "worker"]
+  description = "Label value for ansible groups"
 }
 
 variable "vm_name" {
@@ -37,7 +38,7 @@ variable "vm_type" {
 }
 
 variable "vm_image" {
-  default     = "debian-cloud/debian-11"
+  default     = "ubuntu-os-cloud/ubuntu-2204-lts"
   description = "VM image"
 }
 
