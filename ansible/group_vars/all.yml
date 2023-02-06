@@ -20,6 +20,8 @@ packages:
   - apt-transport-https
   - ca-certificates
   - uidmap
+  - bash-completion
+  - python3-pip
   - containerd.io
   - kubeadm=1.26.1-00
   - kubelet=1.26.1-00

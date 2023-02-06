@@ -15,17 +15,76 @@
         group: root
         mode: '0644'
 
-    - name: Initialize k8s cluster
-      ansible.builtin.command:
-        cmd: kubeadm init --config=kubeadm-config.yaml --upload-certs
-      args:
-        chdir: /root/
-      register: kubeadm
-      changed_when: kubeadm.rc == 0
+    # - name: Check if k8s cluster config file already exist
+    #   ansible.builtin.stat:
+    #     path: /etc/kubernetes/controller-manager.conf
+    #   register: conf
 
-    - name: Print output of kubeadm init
-      ansible.builtin.debug:
-        msg: "{{ kubeadm.stdout }}"
+    # - name: Fail if the k8s config file exist
+    #   ansible.builtin.fail:
+    #     msg: "Existing kubernetes configuration found. Failing cluster init process"
+    #   when: conf.stat.exists
+
+    # # Fix kubeadm init error
+    # # https://forum.linuxfoundation.org/discussion/862825/kubeadm-init-error-cri-v1-runtime-api-is-not-implemented
+
+    # - name: Remove default config file
+    #   ansible.builtin.file:
+    #     path: /etc/containerd/config.toml
+    #     state: absent
+    #   notify: Restart containerd service
+
+    # - name: Initialize k8s cluster
+    #   ansible.builtin.command:
+    #     cmd: kubeadm init --config=kubeadm-config.yaml --upload-certs
+    #   args:
+    #     chdir: /root/
+    #   register: kubeadm
+    #   changed_when: kubeadm.rc == 0
+
+    - name: Create a .kube directory for root
+      ansible.builtin.file:
+        path: /root/.kube
+        state: directory
+        owner: root
+        group: root
+        mode: '0770'
+
+    - name: Create a symbolic link for cluster config
+      ansible.builtin.file:
+        src: /etc/kubernetes/admin.conf
+        dest: /root/.kube/config
+        owner: root
+        group: root
+        state: link
+
+    - name: Fetch cluster admin config to local file system
+      ansible.builtin.fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ../../kubectl/config.yml
+        flat: true
+
+    - name: Download calico network plugin manifest
+      ansible.builtin.get_url:
+        url: https://docs.projectcalico.org/manifests/calico.yaml
+        dest: /root/calico.yaml
+        mode: '0644'
+
+    - name: Install kubernetes python package
+      ansible.builtin.pip:
+        name:
+          - kubernetes>=12.0.0
+          - PyYAML>=3.11
+          - jsonpatch
+
+    - name: Apply calico manifest
+      kubernetes.core.k8s:
+        src: /root/calico.yaml
+        state: present
+        apply: true
 
   handlers:
-
+    - name: Restart containerd service
+      ansible.builtin.service:
+        name: containerd
+        state: restarted
