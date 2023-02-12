@@ -50,6 +50,23 @@
         mode: '0644'
       notify: Apply sysctl configuration
 
+    - name: Download CRI-O
+      ansible.builtin.unarchive:
+        src: "{{ crio_release }}"
+        dest: "/root/"
+        remote_src: true
+        validate_certs: true
+        owner: root
+        group: root
+
+    - name: Install CRI-O
+      ansible.builtin.shell:
+        cmd: /root/cri-o/install
+        chdir: /root/cri-o
+      register: crio
+      changed_when: crio.rc == 0
+      notify: Restart CRI-O
+
   handlers:
     - name: Apply sysctl configuration
       ansible.builtin.command:
@@ -65,3 +82,9 @@
       until: async_poll_results.finished
       retries: 30
       listen: Apply sysctl configuration
+
+    - name: Restart CRI-O
+      ansible.builtin.service:
+        name: crio
+        state: restarted
+        enabled: true

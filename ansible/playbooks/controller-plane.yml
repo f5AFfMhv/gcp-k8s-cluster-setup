@@ -1,6 +1,6 @@
 ---
 - name: Controller plane tasks
-  gather_facts: false
+  gather_facts: true
   become: true
   hosts: gce_group_cp
 
@@ -15,32 +15,37 @@
         group: root
         mode: '0644'
 
-    # - name: Check if k8s cluster config file already exist
-    #   ansible.builtin.stat:
-    #     path: /etc/kubernetes/controller-manager.conf
-    #   register: conf
+    - name: Check if k8s cluster config file already exist
+      ansible.builtin.stat:
+        path: /etc/kubernetes/controller-manager.conf
+      register: conf
 
-    # - name: Fail if the k8s config file exist
-    #   ansible.builtin.fail:
-    #     msg: "Existing kubernetes configuration found. Failing cluster init process"
-    #   when: conf.stat.exists
+    - name: Fail if the k8s config file exist
+      ansible.builtin.fail:
+        msg: "Existing kubernetes configuration found. Failing cluster init process"
+      when: conf.stat.exists
 
-    # # Fix kubeadm init error
-    # # https://forum.linuxfoundation.org/discussion/862825/kubeadm-init-error-cri-v1-runtime-api-is-not-implemented
+    # Fix kubeadm init error
+    # https://forum.linuxfoundation.org/discussion/862825/kubeadm-init-error-cri-v1-runtime-api-is-not-implemented
 
     # - name: Remove default config file
     #   ansible.builtin.file:
     #     path: /etc/containerd/config.toml
     #     state: absent
-    #   notify: Restart containerd service
 
-    # - name: Initialize k8s cluster
-    #   ansible.builtin.command:
-    #     cmd: kubeadm init --config=kubeadm-config.yaml --upload-certs
-    #   args:
-    #     chdir: /root/
-    #   register: kubeadm
-    #   changed_when: kubeadm.rc == 0
+    # - name: Restart containerd service
+    #   ansible.builtin.service:
+    #     name: containerd
+    #     state: restarted
+    #     enabled: true
+
+    - name: Initialize k8s cluster
+      ansible.builtin.command:
+        cmd: kubeadm init --config=kubeadm-config.yaml --upload-certs
+      args:
+        chdir: /root/
+      register: kubeadm
+      changed_when: kubeadm.rc == 0
 
     - name: Create a .kube directory for root
       ansible.builtin.file:
@@ -64,27 +69,39 @@
         dest: ../../kubectl/config.yml
         flat: true
 
-    - name: Download calico network plugin manifest
-      ansible.builtin.get_url:
-        url: https://docs.projectcalico.org/manifests/calico.yaml
-        dest: /root/calico.yaml
-        mode: '0644'
+    # - name: Download calico network plugin manifests
+    #   ansible.builtin.get_url:
+    #     url: "{{ calico_manifest_url }}/{{ item }}"
+    #     dest: "/root/{{ item }}"
+    #     mode: '0644'
+    #   with_items: "{{ calico_manifests }}"
 
-    - name: Install kubernetes python package
-      ansible.builtin.pip:
-        name:
-          - kubernetes>=12.0.0
-          - PyYAML>=3.11
-          - jsonpatch
+    # - name: Install python modules for kubernetes
+    #   ansible.builtin.pip:
+    #     name:
+    #       - kubernetes>=12.0.0
+    #       - PyYAML>=3.11
+    #       - jsonpatch
 
-    - name: Apply calico manifest
-      kubernetes.core.k8s:
-        src: /root/calico.yaml
-        state: present
-        apply: true
+    # - name: Apply calico manifest
+    #   kubernetes.core.k8s:
+    #     src: "/root/{{ item }}"
+    #     state: present
+    #     apply: true
+    #   with_items: "{{ calico_manifests }}"
+    #   ignore_errors: true
+
+    - name: Create Calico resources
+      ansible.builtin.command:
+        cmd: kubectl create -f "{{ calico_manifest_url }}/{{ item }}"
+      register: kubectl
+      changed_when: kubectl.rc == 0
+      with_items: "{{ calico_manifests }}"
+      ignore_errors: true
+
+    - name: Sleep for 120 seconds for calico pods to be ready
+      ansible.builtin.wait_for:
+        timeout: 300
 
   handlers:
-    - name: Restart containerd service
-      ansible.builtin.service:
-        name: containerd
-        state: restarted
+

@@ -2,6 +2,8 @@
 zone: "{{ lookup('ansible.builtin.env', 'GCE_ZONE') }}"
 ansible_ssh_args: "--tunnel-through-iap --zone={{ zone }} --no-user-output-enabled --quiet"
 ansible_scp_extra_args: "--tunnel-through-iap --zone={{ zone }} --quiet"
+kubernetes_version: "1.26.1"
+calico_version: "3.25.0"
 
 gpg_keys:
   - https://download.docker.com/linux/ubuntu/gpg
@@ -9,6 +11,12 @@ gpg_keys:
 apt_repositories:
   - 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
   - 'deb https://download.docker.com/linux/ubuntu jammy stable'
+crio_release: https://storage.googleapis.com/cri-o/artifacts/cri-o.amd64.v{{ kubernetes_version }}.tar.gz
+calico_manifest_url: https://raw.githubusercontent.com/projectcalico/calico/v{{ calico_version }}/manifests
+calico_manifests:
+  - tigera-operator.yaml
+  - custom-resources.yaml
+
 packages:
   - vim
   - curl
@@ -22,7 +30,7 @@ packages:
   - uidmap
   - bash-completion
   - python3-pip
-  - containerd.io
-  - kubeadm=1.26.1-00
-  - kubelet=1.26.1-00
-  - kubectl=1.26.1-00
+  # - containerd.io
+  - "kubeadm={{ kubernetes_version }}-00"
+  - "kubelet={{ kubernetes_version }}-00"
+  - "kubectl={{ kubernetes_version }}-00"

@@ -1,6 +1,17 @@
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
-kubernetesVersion: 1.26.1
-controlPlaneEndpoint: "{{ inventory_hostname }}:6443"
+kubernetesVersion: {{ kubernetes_version }}
+controlPlaneEndpoint: {{ ansible_default_ipv4.address }}:6443
 networking:
   podSubnet: 192.168.0.0/16
+
+---
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+cgroupDriver: systemd
+
+{# ---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+nodeRegistration:
+  criSocket: "unix:///var/run/crio/crio.sock"  #}
