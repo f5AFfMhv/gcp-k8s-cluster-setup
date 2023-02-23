@@ -13,7 +13,13 @@ This repository is intended to use as preparation for CKA (Certified Kubernetes 
   - GCloud
   - Kubectl
 
+Install numpy for increasing IAP TCP upload bandwith (optional)
+```bash
+$(gcloud info --format="value(basic.python_location)") -m pip install numpy
+```
+
 Create service account in GCP and grant `Compute OS Admin Login` role. Create and download service account json key.
+[Check GCP IAP preaparation instructions](https://cloud.google.com/iap/docs/using-tcp-forwarding#gcloud_2)
 
 ## Create infrastructure
 Fill correct info in `env.sh` and source it.
@@ -23,7 +29,7 @@ source env.sh
 cd to terraform directory, check `variables.tf` if any changes should be made according to your setup. Validate project and apply it.
 ```bash
 cd terraform
-terraform validate
+terraform init
 terraform plan
 terraform apply
 ```

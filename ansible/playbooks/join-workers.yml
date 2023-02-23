@@ -1,0 +1,53 @@
+---
+- name: Join nodes to k8s cluster
+  gather_facts: true
+  become: true
+  hosts: all
+  tasks:
+    - name: Get cluster join info
+      when: "'gce_group_cp' in group_names"
+      run_once: true
+      block:
+        - name: Create cluster join token
+          ansible.builtin.command:
+            cmd: kubeadm token create
+          register: token
+          changed_when: token.rc == 0
+
+        - name: Get cluster CA key hash
+          ansible.builtin.shell:
+            cmd: |
+              openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | \
+              openssl rsa -pubin -outform der 2>/dev/null | \
+              openssl dgst -sha256 -hex | \
+              sed 's/^.* //'
+          register: ca_sha
+          changed_when: ca_sha.rc == 0
+
+        - name: Set token fact
+          ansible.builtin.set_fact:
+            cluster_join_token: "{{ token.stdout }}"
+
+        - name: Set CA SHA fact
+          ansible.builtin.set_fact:
+            certificate_sha: "{{ ca_sha.stdout }}"
+
+        - name: Set CP IP fact
+          ansible.builtin.set_fact:
+            cp_ip: "{{ ansible_default_ipv4.address }}"
+
+    - name: Join node to k8s cluster
+      ansible.builtin.shell:
+        cmd: |
+          kubeadm join \
+          --token {{ cluster_join_token }} \
+          {{ cp_ip }}:6443 \
+          --discovery-token-ca-cert-hash \
+          sha256:{{ certificate_sha }}
+      register: join
+      changed_when: join.rc == 0
+      when: "'gce_group_worker' in group_names"
+
+    - debug:
+        msg: "{{ join.stdout }}"
+      when: "'gce_group_worker' in group_names"

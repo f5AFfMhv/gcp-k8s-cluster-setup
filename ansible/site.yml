@@ -4,3 +4,6 @@
 
 - name: Include a play for controller-plane tasks
   ansible.builtin.import_playbook: playbooks/controller-plane.yml
+
+- name: Include a play for joining nodes to k8s
+  ansible.builtin.import_playbook: playbooks/join-workers.yml
