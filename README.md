@@ -2,8 +2,8 @@
 This repository is intended to use as preparation for CKA (Certified Kubernetes Administration) exam. Terraform part will create 3 Ubuntu 22.04 VMs on Google Cloud Platform. Ansible part will prepare kubernetes cluster.
 
 # Documentation
-[Terraform google provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance)
-[Ansible google compute dynamic inventory](https://docs.ansible.com/ansible/latest/collections/google/cloud/gcp_compute_inventory.html)
+[Terraform google provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance)  
+[Ansible google compute dynamic inventory](https://docs.ansible.com/ansible/latest/collections/google/cloud/gcp_compute_inventory.html)  
 [GCP IAP tunneling](https://binx.io/2021/03/10/how-to-tell-ansible-to-use-gcp-iap-tunneling/)
 
 # Setup
@@ -44,7 +44,8 @@ terraform init
 terraform plan
 terraform apply
 ```
-> Terraform will create 3 VMs on the same subnet, there will be no external addresess assigned. To access internet from VMs CloudNAT will be used. To manage VMs from local machine GCP IAP will be used.
+
+Terraform will create 3 VMs on the same subnet, there will be no external addresess assigned. To access internet from VMs CloudNAT will be used. To manage VMs from local machine GCP IAP will be used.
 ## Create Kubernetes cluster
 Change directory to `ansible`. Install python modules from requirements file.
 ```bash
@@ -59,7 +60,8 @@ ansible -m ping all
 Run `site.yml` ansible playbook to setup kubernetes cluster
 ```bash
 ansible-playbook site.yml
-# Start TCP IAP tunnel for kubernetes cluster (will need to provide user password to elevate priviliges)
+# Start TCP IAP tunnel for kubernetes cluster.
+# You will need to provide user password to elevate priviliges
 ansible-playbook playbooks/start-iap-tunnel.yml -K
 ```
 Ansible will:
@@ -69,7 +71,7 @@ Ansible will:
 * join 2 worker nodes to cluster
 * copy kube config file to `kubectl` directory on localhost
 * create IAP tunnel for kubectl communication with cluster API
-* add CP node hostname to /etc/host file on localhost
+* add CP node hostname to `/etc/host` file on localhost
 
 ## Access cluster with kubectl
 `KUBECONFIG` env variable should point to downloaded config.yml in kubectl dir.
