@@ -1,0 +1,20 @@
+---
+- name: Start IAP tunnel for kubectl
+  gather_facts: false
+  hosts: localhost
+  tasks:
+    - name: Establish TCP tunnel to CP 6443 port
+      ansible.builtin.shell:
+        cmd: |
+          nohup gcloud compute start-iap-tunnel \
+          {{ groups.gce_group_cp[0] }} 6443 \
+          --local-host-port=localhost:6443 \
+          --zone={{ zone }} > /dev/null 2>&1 &
+
+    - name: Add CP hostname to hosts file
+      ansible.builtin.lineinfile:
+        dest: /etc/hosts
+        insertafter: EOF
+        line: '127.0.0.1 {{ groups.gce_group_cp[0] }}'
+        state: present
+      become: true

@@ -30,7 +30,6 @@ packages:
   - uidmap
   - bash-completion
   - python3-pip
-  # - containerd.io
   - "kubeadm={{ kubernetes_version }}-00"
   - "kubelet={{ kubernetes_version }}-00"
   - "kubectl={{ kubernetes_version }}-00"

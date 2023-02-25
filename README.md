@@ -7,6 +7,17 @@ This repository is intended to use as preparation for CKA (Certified Kubernetes 
 [GCP IAP tunneling](https://binx.io/2021/03/10/how-to-tell-ansible-to-use-gcp-iap-tunneling/)
 
 # Setup
+
+## Components and versions
+Due to issues I encountered following Linux Foundation CKA instructions, components and versions differs from official LABS.
+
+|           |My setup     |CKA LABS     |
+|-----------|-------------|-------------|
+|OS         |Ubuntu 22.04 |Ubuntu 20.04 |
+|Kubernetes |1.26.1       |1.24.1       |
+|Runtime    |CRI-O        |containerd   |
+|Calico     |3.25.0       |-            |
+
 ## Prerequisites
   - Terraform
   - Ansible
@@ -33,8 +44,8 @@ terraform init
 terraform plan
 terraform apply
 ```
-> Terraform will create 3 VMs on the same subnet, there will be no external addresess assigned. To access internet from VMs CloudNAT will be used. To manage VMs from local machine gcloud will be used as proxy.
-# Create Kubernetes cluster
+> Terraform will create 3 VMs on the same subnet, there will be no external addresess assigned. To access internet from VMs CloudNAT will be used. To manage VMs from local machine GCP IAP will be used.
+## Create Kubernetes cluster
 Change directory to `ansible`. Install python modules from requirements file.
 ```bash
 pip install -r requirements.txt
@@ -48,4 +59,23 @@ ansible -m ping all
 Run `site.yml` ansible playbook to setup kubernetes cluster
 ```bash
 ansible-playbook site.yml
+# Start TCP IAP tunnel for kubernetes cluster (will need to provide user password to elevate priviliges)
+ansible-playbook playbooks/start-iap-tunnel.yml -K
+```
+Ansible will:
+* install required applications
+* initialize k8s cluster with kubeadm
+* apply calico manifests
+* join 2 worker nodes to cluster
+* copy kube config file to `kubectl` directory on localhost
+* create IAP tunnel for kubectl communication with cluster API
+* add CP node hostname to /etc/host file on localhost
+
+## Access cluster with kubectl
+`KUBECONFIG` env variable should point to downloaded config.yml in kubectl dir.
+Test if cluster API can be accessed
+```bash
+cd kubectl
+echo $KUBECONFIG # should be full path to config.yml
+kubectl get nodes
 ```

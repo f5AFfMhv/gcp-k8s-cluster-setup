@@ -32,22 +32,18 @@
           ansible.builtin.set_fact:
             certificate_sha: "{{ ca_sha.stdout }}"
 
-        - name: Set CP IP fact
+        - name: Set CP hostname fact
           ansible.builtin.set_fact:
-            cp_ip: "{{ ansible_default_ipv4.address }}"
+            cp_hostname: "{{ ansible_hostname }}"
 
     - name: Join node to k8s cluster
       ansible.builtin.shell:
         cmd: |
           kubeadm join \
           --token {{ cluster_join_token }} \
-          {{ cp_ip }}:6443 \
+          {{ cp_hostname }}:6443 \
           --discovery-token-ca-cert-hash \
           sha256:{{ certificate_sha }}
       register: join
       changed_when: join.rc == 0
-      when: "'gce_group_worker' in group_names"
-
-    - debug:
-        msg: "{{ join.stdout }}"
       when: "'gce_group_worker' in group_names"

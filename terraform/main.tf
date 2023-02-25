@@ -71,15 +71,15 @@ resource "google_compute_firewall" "internal-ingress-rules" {
   priority      = 1000
 }
 
-resource "google_compute_firewall" "ssh-rules" {
+resource "google_compute_firewall" "tcp-rules" {
   project    = var.project
-  name       = "k8s-fw-ssh-rules"
+  name       = "k8s-fw-tcp-rules"
   network    = var.vm_network
   direction  = "INGRESS"
   depends_on = [google_compute_subnetwork.k8s_subnet]
   allow {
     protocol = "tcp"
-    ports    = ["22"]
+    ports    = ["22","6443"]
   }
   source_ranges = ["35.235.240.0/20"]
   priority      = 1000

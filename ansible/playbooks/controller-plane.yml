@@ -3,9 +3,6 @@
   gather_facts: true
   become: true
   hosts: gce_group_cp
-
-  pre_tasks:
-
   tasks:
     - name: Deploy kubeadm config file
       ansible.builtin.template:
