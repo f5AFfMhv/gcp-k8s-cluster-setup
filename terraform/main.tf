@@ -79,7 +79,7 @@ resource "google_compute_firewall" "tcp-rules" {
   depends_on = [google_compute_subnetwork.k8s_subnet]
   allow {
     protocol = "tcp"
-    ports    = ["22","6443"]
+    ports    = ["22","6443","80","443","8080","9000"]
   }
   source_ranges = ["35.235.240.0/20"]
   priority      = 1000
