@@ -24,7 +24,7 @@ Due to issues I encountered following Linux Foundation CKA instructions, compone
   - GCloud
   - Kubectl
 
-Install numpy for increasing IAP TCP upload bandwith (optional)
+Install numpy for increased IAP TCP upload bandwith (optional)
 ```bash
 $(gcloud info --format="value(basic.python_location)") -m pip install numpy
 ```

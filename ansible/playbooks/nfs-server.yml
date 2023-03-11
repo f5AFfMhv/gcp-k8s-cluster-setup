@@ -19,12 +19,6 @@
         group: root
         mode: '1777'
 
-    - name: Copy using inline content
-      ansible.builtin.copy:
-        content: 'This is my test file'
-        dest: /opt/sfw/hello.txt
-        mode: '0777'
-
     - name: Add NFS export
       ansible.builtin.copy:
         content: '/opt/sfw/ *(rw,sync,no_root_squash,subtree_check)'
