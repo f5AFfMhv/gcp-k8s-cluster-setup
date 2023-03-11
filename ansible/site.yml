@@ -7,3 +7,6 @@
 
 - name: Include a play for joining nodes to k8s
   ansible.builtin.import_playbook: playbooks/join-workers.yml
+
+- name: Include a play for NFS server
+  ansible.builtin.import_playbook: playbooks/nfs-server.yml

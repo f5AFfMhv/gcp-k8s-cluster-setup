@@ -1,0 +1,28 @@
+cp
+   cp /var/lib/etcd/snapshot.db $HOME/backup/snapshot.db-$(date +%m-%d-%y)
+   cp /root/kubeadm-config.yaml $HOME/backup/
+   cp -r /etc/kubernetes/pki/etcd $HOME/backup/
+   apt-mark unhold kubeadm
+   apt-get install -y kubeadm=1.26.2-00
+   apt-mark hold kubeadm
+   kubectl drain k8s-0 --ignore-daemonsets
+   kubeadm upgrade plan
+   kubeadm upgrade apply v1.26.2
+   apt-mark unhold kubelet kubectl
+   apt-get install -y kubelet=1.26.2-00 kubectl=1.26.2-00
+   apt-mark hold kubelet kubectl
+   systemctl daemon-reload
+   systemctl restart kubelet
+   kubectl uncordon k8s-0
+------
+   kubectl drain k8s-1 --ignore-daemonsets
+   kubectl uncordon k8..
+
+workers
+   apt-mark unhold kubeadm
+   apt-get update && sudo apt-get install -y kubeadm=1.26.2-00
+   kubeadm upgrade node
+   apt-mark unhold kubelet kubectl
+   apt-get install -y kubelet=1.26.2-00 kubectl=1.26.2-00
+   systemctl daemon-reload
+   systemctl restart kubelet

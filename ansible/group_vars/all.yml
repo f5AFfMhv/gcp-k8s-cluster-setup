@@ -30,6 +30,7 @@ packages:
   - uidmap
   - bash-completion
   - python3-pip
+  - nfs-common
   - "kubeadm={{ kubernetes_version }}-00"
   - "kubelet={{ kubernetes_version }}-00"
   - "kubectl={{ kubernetes_version }}-00"

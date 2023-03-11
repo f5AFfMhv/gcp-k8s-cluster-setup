@@ -1,0 +1,37 @@
+---
+- name: Install NFS server on CP
+  gather_facts: true
+  become: true
+  hosts: gce_group_cp
+  tasks:
+    - name: Install NFS server
+      ansible.builtin.apt:
+        name: nfs-kernel-server
+        state: present
+        update_cache: true
+
+    - name: Create NFS dir
+      ansible.builtin.file:
+        path: /opt/sfw
+        state: directory
+        recurse: true
+        owner: root
+        group: root
+        mode: '1777'
+
+    - name: Copy using inline content
+      ansible.builtin.copy:
+        content: 'This is my test file'
+        dest: /opt/sfw/hello.txt
+        mode: '0777'
+
+    - name: Add NFS export
+      ansible.builtin.copy:
+        content: '/opt/sfw/ *(rw,sync,no_root_squash,subtree_check)'
+        dest: /etc/exports
+
+    - name: Update exports
+      ansible.builtin.command:
+        cmd: exportfs -ra
+      register: result
+      changed_when: result.rc == 0
