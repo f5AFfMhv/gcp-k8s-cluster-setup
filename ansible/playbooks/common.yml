@@ -67,6 +67,15 @@
       changed_when: crio.rc == 0
       notify: Restart CRI-O
 
+    - name: Copy registries config file for CRI-O
+      ansible.builtin.copy:
+        src: files/registries.conf
+        dest: /etc/containers/registries.conf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart CRI-O
+
   handlers:
     - name: Apply sysctl configuration
       ansible.builtin.command:
