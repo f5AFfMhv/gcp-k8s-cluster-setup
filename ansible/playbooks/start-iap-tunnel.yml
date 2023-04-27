@@ -18,3 +18,7 @@
         line: '127.0.0.1 {{ groups.gce_group_cp[0] }}'
         state: present
       become: true
+
+    - name: Run kubernetes preparation script
+      ansible.builtin.shell:
+        cmd: ../scripts/prepare-kubernetes.sh

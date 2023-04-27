@@ -59,10 +59,8 @@ ansible -m ping all
 ```
 Run `site.yml` ansible playbook to setup kubernetes cluster
 ```bash
-ansible-playbook site.yml
-# Start TCP IAP tunnel for kubernetes cluster.
-# You will need to provide user password to elevate priviliges
-ansible-playbook playbooks/start-iap-tunnel.yml -K
+# You will need to provide user password to elevate priviliges for starting IAP tunnel
+ansible-playbook site.yml -K
 ```
 Ansible will:
 * install required applications

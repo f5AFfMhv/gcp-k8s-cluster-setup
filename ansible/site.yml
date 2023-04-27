@@ -10,3 +10,6 @@
 
 - name: Include a play for NFS server
   ansible.builtin.import_playbook: playbooks/nfs-server.yml
+
+- name: Include a play for starting IAP tunnel
+  ansible.builtin.import_playbook: playbooks/start-iap-tunnel.yml
