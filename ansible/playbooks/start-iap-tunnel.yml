@@ -19,6 +19,17 @@
         state: present
       become: true
 
+    - name: Wait for 1min
+      ansible.builtin.wait_for:
+        timeout: 60
+
     - name: Run kubernetes preparation script
       ansible.builtin.shell:
         cmd: ../scripts/prepare-kubernetes.sh
+      register: output
+      changed_when: output.rc != 0
+
+    - name: Preparation script output
+      ansible.builtin.debug:
+        msg: "{{ output.stdout_lines + output.stderr_lines }}"
+
