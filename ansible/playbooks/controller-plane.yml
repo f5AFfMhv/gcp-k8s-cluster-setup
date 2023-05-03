@@ -48,7 +48,7 @@
     - name: Fetch cluster admin config to local file system
       ansible.builtin.fetch:
         src: /etc/kubernetes/admin.conf
-        dest: ../../kubectl/config.yml
+        dest: ../../kubernetes/config.yml
         flat: true
 
     - name: Create Calico resources

@@ -67,15 +67,15 @@ Ansible will:
 * initialize k8s cluster with kubeadm
 * apply calico manifests
 * join 2 worker nodes to cluster
-* copy kube config file to `kubectl` directory on localhost
+* copy kube config file to `kubernetes` directory on localhost
 * create IAP tunnel for kubectl communication with cluster API
-* add CP node hostname to `/etc/host` file on localhost
+* add CP node hostname to `/etc/hosts` file on localhost
 
 ## Access cluster with kubectl
-`KUBECONFIG` env variable should point to downloaded config.yml in kubectl dir.
+`KUBECONFIG` env variable should point to downloaded config.yml in `kubernetes` dir.
 Test if cluster API can be accessed
 ```bash
-cd kubectl
+cd kubernetes
 echo $KUBECONFIG # should be full path to config.yml
 kubectl get nodes
 ```
