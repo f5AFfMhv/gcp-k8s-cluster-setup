@@ -2,7 +2,7 @@
 - name: Install NFS server on CP
   gather_facts: true
   become: true
-  hosts: gce_group_cp
+  hosts: gce_group_cp[0]
   tasks:
     - name: Install NFS server
       ansible.builtin.apt:
@@ -23,6 +23,9 @@
       ansible.builtin.copy:
         content: '/opt/sfw/ *(rw,sync,no_root_squash,subtree_check)'
         dest: /etc/exports
+        owner: root
+        group: root
+        mode: '0640'
 
     - name: Update exports
       ansible.builtin.command:

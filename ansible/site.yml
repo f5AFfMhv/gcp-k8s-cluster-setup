@@ -1,15 +1,21 @@
 ---
-- name: Include a play for common tasks
+- name: Include play for common tasks
   ansible.builtin.import_playbook: playbooks/common.yml
 
-- name: Include a play for controller-plane tasks
-  ansible.builtin.import_playbook: playbooks/controller-plane.yml
-
-- name: Include a play for joining nodes to k8s
-  ansible.builtin.import_playbook: playbooks/join-workers.yml
-
-- name: Include a play for NFS server
+- name: Include play for NFS server
   ansible.builtin.import_playbook: playbooks/nfs-server.yml
 
-- name: Include a play for starting IAP tunnel
+- name: Include play for initializing k8s cluster
+  ansible.builtin.import_playbook: playbooks/controller-plane.yml
+
+- name: Include play for joining worker nodes to k8s
+  ansible.builtin.import_playbook: playbooks/join-workers.yml
+
+- name: Include play for joining CP nodes to k8s
+  ansible.builtin.import_playbook: playbooks/join-cp.yml
+
+- name: Include play for load balancer setup
+  ansible.builtin.import_playbook: playbooks/load-balancer.yml
+
+- name: Include play for starting IAP tunnel
   ansible.builtin.import_playbook: playbooks/start-iap-tunnel.yml

@@ -1,0 +1,82 @@
+---
+- name: Join CP nodes to k8s cluster
+  gather_facts: true
+  become: true
+  hosts:
+    - gce_group_cp
+    - gce_group_lb[0]
+  tasks:
+    - name: Get cluster join info
+      run_once: true
+      when: inventory_hostname == groups.gce_group_cp[0]
+      block:
+        - name: Create cluster join token
+          ansible.builtin.command:
+            cmd: kubeadm token create
+          register: token
+          changed_when: token.rc == 0
+
+        - name: Get cluster CA key hash
+          ansible.builtin.shell:
+            cmd: |
+              openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | \
+              openssl rsa -pubin -outform der 2>/dev/null | \
+              openssl dgst -sha256 -hex | \
+              sed 's/^.* //'
+          register: ca_sha
+          changed_when: ca_sha.rc == 0
+
+        - name: Set token fact
+          ansible.builtin.set_fact:
+            cluster_join_token: "{{ token.stdout }}"
+
+        - name: Set CA SHA fact
+          ansible.builtin.set_fact:
+            certificate_sha: "{{ ca_sha.stdout }}"
+
+        - name: Set CP hostname fact
+          ansible.builtin.set_fact:
+            cp_hostname: "{{ hostvars[groups['gce_group_lb'][0]]['ansible_hostname'] }}"
+
+        - name: Create a new cp certificate
+          ansible.builtin.shell:
+            cmd: |
+              kubeadm init phase upload-certs --upload-certs
+          register: cert
+          changed_when: cert.rc == 0
+
+        - name: Set cert key fact
+          ansible.builtin.set_fact:
+            cert_key: "{{ cert.stdout_lines[-1] }}"
+
+    - name: Join CP nodes to cluster
+      when: inventory_hostname != groups.gce_group_cp[0] and 'gce_group_cp' in group_names
+      block:
+        - name: Join CP node to k8s cluster
+          ansible.builtin.shell:
+            cmd: |
+              kubeadm join \
+              --token {{ cluster_join_token }} \
+              {{ cp_hostname }}:6443 \
+              --discovery-token-ca-cert-hash \
+              sha256:{{ certificate_sha }} \
+              --control-plane --certificate-key \
+              {{ cert_key }}
+          register: join
+          changed_when: join.rc == 0
+
+        - name: Create a .kube directory for root
+          ansible.builtin.file:
+            path: /root/.kube
+            state: directory
+            owner: root
+            group: root
+            mode: '0770'
+
+        - name: Create a symbolic link for cluster config
+          ansible.builtin.file:
+            src: /etc/kubernetes/admin.conf
+            dest: /root/.kube/config
+            owner: root
+            group: root
+            state: link

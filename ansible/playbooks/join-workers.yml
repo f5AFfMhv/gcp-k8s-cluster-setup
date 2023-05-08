@@ -2,11 +2,14 @@
 - name: Join nodes to k8s cluster
   gather_facts: true
   become: true
-  hosts: all
+  hosts:
+    - gce_group_cp[0]
+    - gce_group_lb[0]
+    - gce_group_worker
   tasks:
     - name: Get cluster join info
-      when: "'gce_group_cp' in group_names"
       run_once: true
+      when: inventory_hostname == groups.gce_group_cp[0]
       block:
         - name: Create cluster join token
           ansible.builtin.command:
@@ -34,7 +37,7 @@
 
         - name: Set CP hostname fact
           ansible.builtin.set_fact:
-            cp_hostname: "{{ ansible_hostname }}"
+            cp_hostname: "{{ hostvars[groups['gce_group_lb'][0]]['ansible_hostname'] }}"
 
     - name: Join node to k8s cluster
       ansible.builtin.shell:

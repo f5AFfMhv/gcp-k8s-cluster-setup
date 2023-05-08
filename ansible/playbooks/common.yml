@@ -1,11 +1,11 @@
 ---
 - name: Common tasks for all hosts
-  gather_facts: false
+  gather_facts: true
   become: true
   hosts: all
 
   pre_tasks:
-    - name: Add an Apt signing key for docker
+    - name: Add an APT signing keys
       ansible.builtin.apt_key:
         url: "{{ item }}"
         state: present
@@ -18,63 +18,73 @@
       with_items: "{{ apt_repositories }}"
 
   tasks:
-    - name: Install required applications
-      ansible.builtin.apt:
-        name: "{{ packages }}"
-        state: present
-        update_cache: true
+    - name: Common tasks for kubernetes cluster nodes
+      when: inventory_hostname != groups.gce_group_lb[0]
+      block:
+        - name: Install required applications
+          ansible.builtin.apt:
+            name: "{{ packages }}"
+            state: present
+            update_cache: true
 
-    - name: Prevent kubernetes packages from being upgraded
-      ansible.builtin.dpkg_selections:
-        name: "{{ item }}"
-        selection: hold
-      with_items:
-        - kubelet
-        - kubeadm
-        - kubectl
+        - name: Prevent kubernetes packages from being upgraded
+          ansible.builtin.dpkg_selections:
+            name: "{{ item }}"
+            selection: hold
+          with_items:
+            - kubelet
+            - kubeadm
+            - kubectl
 
-    - name: Add required kernel modules
-      community.general.modprobe:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - overlay
-        - br_netfilter
+        - name: Add required kernel modules
+          community.general.modprobe:
+            name: "{{ item }}"
+            state: present
+          with_items:
+            - overlay
+            - br_netfilter
 
-    - name: Copy sysctl config file for kubernetes
-      ansible.builtin.copy:
-        src: files/kubernetes.conf
-        dest: /etc/sysctl.d/kubernetes.conf
-        owner: root
-        group: root
-        mode: '0644'
-      notify: Apply sysctl configuration
+        - name: Copy sysctl config file for kubernetes
+          ansible.builtin.copy:
+            src: files/kubernetes.conf
+            dest: /etc/sysctl.d/kubernetes.conf
+            owner: root
+            group: root
+            mode: '0644'
+          notify: Apply sysctl configuration
 
-    - name: Download CRI-O
-      ansible.builtin.unarchive:
-        src: "{{ crio_release }}"
-        dest: "/root/"
-        remote_src: true
-        validate_certs: true
-        owner: root
-        group: root
+        - name: Download CRI-O
+          ansible.builtin.unarchive:
+            src: "{{ crio_release }}"
+            dest: "/root/"
+            remote_src: true
+            validate_certs: true
+            owner: root
+            group: root
 
-    - name: Install CRI-O
-      ansible.builtin.shell:
-        cmd: /root/cri-o/install
-        chdir: /root/cri-o
-      register: crio
-      changed_when: crio.rc == 0
-      notify: Restart CRI-O
+        - name: Install CRI-O
+          ansible.builtin.shell:
+            cmd: /root/cri-o/install
+            chdir: /root/cri-o
+          register: crio
+          changed_when: crio.rc == 0
+          notify: Restart CRI-O
 
-    - name: Copy registries config file for CRI-O
-      ansible.builtin.copy:
-        src: files/registries.conf
-        dest: /etc/containers/registries.conf
-        owner: root
-        group: root
-        mode: '0644'
-      notify: Restart CRI-O
+        - name: Copy registries config file for CRI-O
+          ansible.builtin.copy:
+            src: files/registries.conf
+            dest: /etc/containers/registries.conf
+            owner: root
+            group: root
+            mode: '0644'
+          notify: Restart CRI-O
+
+        - name: Point load balancer hostname to first control plane node
+          ansible.builtin.lineinfile:
+            dest: /etc/hosts
+            insertafter: EOF
+            line: "{{ hostvars[groups['gce_group_cp'][0]]['ansible_default_ipv4']['address'] }} {{ hostvars[groups['gce_group_lb'][0]]['ansible_hostname'] }}"
+            state: present
 
   handlers:
     - name: Apply sysctl configuration
@@ -85,7 +95,7 @@
       register: net_restarting
 
     - name: Check network connectivity
-      async_status:
+      ansible.builtin.async_status:
         jid: "{{ net_restarting.ansible_job_id }}"
       register: async_poll_results
       until: async_poll_results.finished

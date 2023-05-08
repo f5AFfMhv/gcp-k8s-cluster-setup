@@ -2,63 +2,68 @@
 - name: Controller plane tasks
   gather_facts: true
   become: true
-  hosts: gce_group_cp
+  hosts:
+    - gce_group_cp[0]
+    - gce_group_lb[0]
   tasks:
-    - name: Deploy kubeadm config file
-      ansible.builtin.template:
-        src: templates/kubeadm-config.yaml.j2
-        dest: /root/kubeadm-config.yaml
-        owner: root
-        group: root
-        mode: '0644'
+    - name: Initialize kubernetes cluster
+      when: inventory_hostname == groups.gce_group_cp[0]
+      block:
+        - name: Deploy kubeadm config file
+          ansible.builtin.template:
+            src: templates/kubeadm-config.yaml.j2
+            dest: /root/kubeadm-config.yaml
+            owner: root
+            group: root
+            mode: '0644'
 
-    - name: Check if k8s cluster config file already exist
-      ansible.builtin.stat:
-        path: /etc/kubernetes/controller-manager.conf
-      register: conf
+        - name: Check if k8s cluster config file already exist
+          ansible.builtin.stat:
+            path: /etc/kubernetes/controller-manager.conf
+          register: conf
 
-    - name: End play if the k8s config file exist
-      ansible.builtin.meta: end_play
-      when: conf.stat.exists
+        - name: End play if the k8s config file exist
+          ansible.builtin.meta: end_play
+          when: conf.stat.exists
 
-    - name: Initialize k8s cluster
-      ansible.builtin.command:
-        cmd: kubeadm init --config=kubeadm-config.yaml --upload-certs
-      args:
-        chdir: /root/
-      register: kubeadm
-      changed_when: kubeadm.rc == 0
+        - name: Initialize k8s cluster
+          ansible.builtin.command:
+            cmd: kubeadm init --config=kubeadm-config.yaml --upload-certs
+          args:
+            chdir: /root/
+          register: kubeadm
+          changed_when: kubeadm.rc == 0
 
-    - name: Create a .kube directory for root
-      ansible.builtin.file:
-        path: /root/.kube
-        state: directory
-        owner: root
-        group: root
-        mode: '0770'
+        - name: Create a .kube directory for root
+          ansible.builtin.file:
+            path: /root/.kube
+            state: directory
+            owner: root
+            group: root
+            mode: '0770'
 
-    - name: Create a symbolic link for cluster config
-      ansible.builtin.file:
-        src: /etc/kubernetes/admin.conf
-        dest: /root/.kube/config
-        owner: root
-        group: root
-        state: link
+        - name: Create a symbolic link for cluster config
+          ansible.builtin.file:
+            src: /etc/kubernetes/admin.conf
+            dest: /root/.kube/config
+            owner: root
+            group: root
+            state: link
 
-    - name: Fetch cluster admin config to local file system
-      ansible.builtin.fetch:
-        src: /etc/kubernetes/admin.conf
-        dest: ../../kubernetes/config.yml
-        flat: true
+        - name: Fetch cluster admin config to local file system
+          ansible.builtin.fetch:
+            src: /etc/kubernetes/admin.conf
+            dest: ../../kubernetes/config.yml
+            flat: true
 
-    - name: Create Calico resources
-      ansible.builtin.command:
-        cmd: kubectl create -f "{{ calico_manifest_url }}/{{ item }}"
-      register: kubectl
-      changed_when: kubectl.rc == 0
-      with_items: "{{ calico_manifests }}"
-      ignore_errors: true
+        - name: Create Calico resources
+          ansible.builtin.command:
+            cmd: kubectl create -f "{{ calico_manifest_url }}/{{ item }}"
+          register: kubectl
+          changed_when: kubectl.rc == 0
+          with_items: "{{ calico_manifests }}"
+          ignore_errors: true
 
-    - name: Wait for 5min for calico pods to be ready
-      ansible.builtin.wait_for:
-        timeout: 300
+        - name: Wait for 5min for calico pods to be ready
+          ansible.builtin.wait_for:
+            timeout: 300

@@ -1,0 +1,41 @@
+---
+- name: HA proxy load balancer setup
+  gather_facts: true
+  become: true
+  hosts: all
+
+  tasks:
+    - name: Tasks for LB host
+      when: "'gce_group_lb' in group_names"
+      block:
+        - name: Install required applications
+          ansible.builtin.apt:
+            name: "{{ item }}"
+            state: present
+            update_cache: true
+          with_items:
+            - vim
+            - haproxy
+
+        - name: Deploy HA proxy config file
+          ansible.builtin.template:
+            src: templates/haproxy.cfg.j2
+            dest: /etc/haproxy/haproxy.cfg
+            owner: root
+            group: root
+            mode: '0644'
+          notify: Restart HAproxy
+
+    - name: Remove cp hostname from hosts file
+      ansible.builtin.lineinfile:
+        dest: /etc/hosts
+        insertafter: EOF
+        line: "{{ hostvars[groups['gce_group_cp'][0]]['ansible_default_ipv4']['address'] }} {{hostvars[groups['gce_group_lb'][0]]['ansible_hostname'] }}"
+        state: absent
+
+  handlers:
+    - name: Restart HAproxy
+      ansible.builtin.service:
+        name: haproxy
+        state: restarted
+        enabled: true

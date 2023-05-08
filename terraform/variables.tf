@@ -23,7 +23,7 @@ variable "tags" {
 }
 
 variable "ansible_groups" {
-  default     = ["cp", "worker", "worker"]
+  default     = ["cp", "cp", "cp", "worker", "worker", "lb"]
   description = "Label value for ansible groups"
 }
 
@@ -48,7 +48,7 @@ variable "vm_network" {
 }
 
 variable "vm_count" {
-  default     = 3
+  default     = 6
   description = "VM count"
 }
 

@@ -4,13 +4,15 @@ ansible_ssh_args: "--tunnel-through-iap --zone={{ zone }} --no-user-output-enabl
 ansible_scp_extra_args: "--tunnel-through-iap --zone={{ zone }} --quiet"
 kubernetes_version: "1.26.1"
 calico_version: "3.25.0"
+load_balancer: k8scp
+
 
 gpg_keys:
-  - https://download.docker.com/linux/ubuntu/gpg
+  # - https://download.docker.com/linux/ubuntu/gpg
   - https://packages.cloud.google.com/apt/doc/apt-key.gpg
 apt_repositories:
   - 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
-  - 'deb https://download.docker.com/linux/ubuntu jammy stable'
+  # - 'deb https://download.docker.com/linux/ubuntu jammy stable'
 crio_release: https://storage.googleapis.com/cri-o/artifacts/cri-o.amd64.v{{ kubernetes_version }}.tar.gz
 calico_manifest_url: https://raw.githubusercontent.com/projectcalico/calico/v{{ calico_version }}/manifests
 calico_manifests:
