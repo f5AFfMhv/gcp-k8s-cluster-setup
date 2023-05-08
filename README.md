@@ -1,5 +1,5 @@
 # Introduction
-This repository is intended to use as preparation for CKA (Certified Kubernetes Administration) exam. Terraform part will create 3 Ubuntu 22.04 VMs on Google Cloud Platform. Ansible part will prepare kubernetes cluster.
+This repository is intended to use as preparation for CKA (Certified Kubernetes Administration) exam. Terraform part will create 6 Ubuntu 22.04 VMs on Google Cloud Platform. Ansible part will prepare kubernetes cluster.
 
 # Documentation
 [Terraform google provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance)  
@@ -45,7 +45,7 @@ terraform plan
 terraform apply
 ```
 
-Terraform will create 3 VMs on the same subnet, there will be no external addresess assigned. To access internet from VMs CloudNAT will be used. To manage VMs from local machine GCP IAP will be used.
+Terraform will create 6 VMs on the same subnet, there will be no external addresess assigned. To access internet from VMs CloudNAT will be used. To manage VMs from local machine GCP IAP will be used.
 ## Create Kubernetes cluster
 Change directory to `ansible`. Install python modules from requirements file.
 ```bash
@@ -67,9 +67,11 @@ Ansible will:
 * initialize k8s cluster with kubeadm
 * apply calico manifests
 * join 2 worker nodes to cluster
+* join 3 cp nodes to cluster
+* setup HAproxy for kubernetes API
 * copy kube config file to `kubernetes` directory on localhost
 * create IAP tunnel for kubectl communication with cluster API
-* add CP node hostname to `/etc/hosts` file on localhost
+* add load balancer node hostname to `/etc/hosts` file on localhost
 
 ## Access cluster with kubectl
 `KUBECONFIG` env variable should point to downloaded config.yml in `kubernetes` dir.
