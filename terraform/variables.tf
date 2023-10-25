@@ -23,7 +23,7 @@ variable "tags" {
 }
 
 variable "ansible_groups" {
-  default     = ["cp", "cp", "cp", "worker", "worker", "lb"]
+  default     = ["cp", "cp", "worker", "worker", "worker", "lb"]
   description = "Label value for ansible groups"
 }
 
