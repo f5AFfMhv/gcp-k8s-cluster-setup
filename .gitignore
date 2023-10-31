@@ -1,0 +1,7 @@
+.vscode/
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+gce_service_account.json
+prod_env.sh

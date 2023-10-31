@@ -29,16 +29,15 @@ Install numpy for increased IAP TCP upload bandwith (optional)
 $(gcloud info --format="value(basic.python_location)") -m pip install numpy
 ```
 
-Create service account in GCP and grant `Compute OS Admin Login` role. Create and download service account json key.
+Fill correct info in `env.sh` and run `init.sh`. It will initiate login to google cloud, create service account and download service account json key.
 [Check GCP IAP preaparation instructions](https://cloud.google.com/iap/docs/using-tcp-forwarding#gcloud_2)
 
+
 ## Create infrastructure
-Fill correct info in `env.sh` and source it.
+
+Source environment variables, cd to terraform directory, check `variables.tf` if any changes should be made according to your setup. Validate project and apply it.
 ```bash
 source env.sh
-```
-cd to terraform directory, check `variables.tf` if any changes should be made according to your setup. Validate project and apply it.
-```bash
 cd terraform
 terraform init
 terraform plan

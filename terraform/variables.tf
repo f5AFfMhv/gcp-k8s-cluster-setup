@@ -1,20 +1,18 @@
 
 variable "region" {
-  default     = "us-west1"
   description = "GCP region"
 }
 
 variable "zone" {
-  default     = "us-west1-a"
   description = "GCP zone"
 }
 
 variable "account_id" {
-  description = "Service account exported as env var $TF_VAR_account_id"
+  description = "GCP service account ID"
 }
 
 variable "project" {
-  description = "Service account exported as env var $TF_VAR_project"
+  description = "GCP project ID"
 }
 
 variable "tags" {
