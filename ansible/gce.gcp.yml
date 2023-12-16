@@ -2,7 +2,8 @@ plugin: gcp_compute
 hostnames:
   - name
 projects:
-  - personal-stuff-337412
+  - k8s-cluster-408316
+auth_kind: serviceaccount
 keyed_groups:
   - prefix: gce
     key: labels

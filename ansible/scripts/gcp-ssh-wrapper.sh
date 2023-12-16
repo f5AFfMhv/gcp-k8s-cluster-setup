@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # https://binx.io/2021/03/10/how-to-tell-ansible-to-use-gcp-iap-tunneling/
 # This is a wrapper script allowing to use GCP's IAP SSH option to connect
 # to our servers.
@@ -14,9 +15,9 @@ cmd="${@: -1: 1}"
 # It's an ugly hack, but for now we'll only accept the options starting with '--'
 declare -a opts
 for ssh_arg in "${@: 1: $# -3}" ; do
-        if [[ "${ssh_arg}" == --* ]] ; then
-                opts+="${ssh_arg} "
-        fi
+    if [[ "${ssh_arg}" == --* ]] ; then
+        opts+="${ssh_arg} "
+    fi
 done
 
 exec gcloud compute ssh $opts "${host}" -- -C "${cmd}"

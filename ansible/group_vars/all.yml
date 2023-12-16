@@ -4,7 +4,7 @@ ansible_ssh_args: "--tunnel-through-iap --zone={{ zone }} --no-user-output-enabl
 ansible_scp_extra_args: "--tunnel-through-iap --zone={{ zone }} --quiet"
 kubernetes_version: "1.26.1"
 calico_version: "3.25.0"
-nfs_path: /opt/sfw
+nfs_path: /opt/nfs
 
 gpg_keys:
   # - https://download.docker.com/linux/ubuntu/gpg

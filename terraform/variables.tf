@@ -9,12 +9,8 @@ variable "zone" {
   description = "GCP zone"
 }
 
-variable "account_id" {
-  description = "Service account exported as env var $TF_VAR_account_id"
-}
-
 variable "project" {
-  description = "Service account exported as env var $TF_VAR_project"
+  description = "Project ID exported as env var $TF_VAR_project"
 }
 
 variable "tags" {

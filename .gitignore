@@ -1,0 +1,10 @@
+.vscode/
+test_terraform/
+kubernetes/config.yml
+kubernetes/manifests/
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+env_prod.sh
+gce_service_account.json

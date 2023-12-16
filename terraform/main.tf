@@ -114,8 +114,4 @@ resource "google_compute_instance" "k8s_infra" {
 
   metadata_startup_script = "apt-get update && apt-get upgrade -y"
 
-  service_account {
-    email  = var.account_id
-    scopes = ["cloud-platform"]
-  }
 }
